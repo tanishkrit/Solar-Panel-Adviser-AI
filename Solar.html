@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Rooftop Solar Analyzer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Light gray background */
+        }
+        .card {
+            background-color: white;
+            border-radius: 0.75rem; /* 12px */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            padding: 1.5rem; /* 24px */
+            margin-bottom: 1.5rem; /* 24px */
+        }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #09f;
+            animation: spin 1s ease infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        /* Custom scrollbar for better aesthetics */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        .result-section h3 {
+            font-size: 1.125rem; /* 18px */
+            font-weight: 600;
+            color: #1f2937; /* Gray 800 */
+            margin-bottom: 0.5rem; /* 8px */
+            border-bottom: 1px solid #e5e7eb; /* Gray 200 */
+            padding-bottom: 0.5rem; /* 8px */
+        }
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px dashed #e5e7eb; /* Gray 200 */
+        }
+        .result-item:last-child {
+            border-bottom: none;
+        }
+        .result-item span:first-child {
+            font-weight: 500;
+            color: #4b5563; /* Gray 600 */
+        }
+        .result-item span:last-child {
+            color: #1f2937; /* Gray 800 */
+            text-align: right;
+        }
+        .badge {
+            display: inline-block;
+            padding: 0.25em 0.6em;
+            font-size: 0.75em;
+            font-weight: 700;
+            line-height: 1;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: baseline;
+            border-radius: 0.375rem; /* 6px */
+        }
+        .badge-green {
+            color: #065f46; /* Green 800 */
+            background-color: #d1fae5; /* Green 100 */
+        }
+        .badge-red {
+            color: #991b1b; /* Red 800 */
+            background-color: #fee2e2; /* Red 100 */
+        }
+        .badge-yellow {
+            color: #92400e; /* Amber 800 */
+            background-color: #fef3c7; /* Amber 100 */
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8">
+
+    <div class="w-full max-w-3xl">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl sm:text-4xl font-bold text-gray-800">☀️ AI Rooftop Solar Analyzer</h1>
+            <p class="text-gray-600 mt-2 text-sm sm:text-base">
+                Upload a satellite image of a rooftop to assess its solar installation potential,
+                receive recommendations, and get an ROI estimate.
+            </p>
+        </header>
+
+        <div class="card">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4">1. Upload Rooftop Image</h2>
+            <input type="file" id="imageUpload" accept="image/png, image/jpeg, image/jpg" class="block w-full text-sm text-gray-500
+                file:mr-4 file:py-2 file:px-4
+                file:rounded-lg file:border-0
+                file:text-sm file:font-semibold
+                file:bg-blue-50 file:text-blue-700
+                hover:file:bg-blue-100
+            "/>
+            <div id="imagePreviewContainer" class="mt-4 hidden">
+                <img id="imagePreview" src="#" alt="Image Preview" class="max-w-full mx-auto rounded-lg shadow-md" style="max-height: 300px;"/>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4">2. Optional Parameters</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="location" class="block text-sm font-medium text-gray-700">Location (e.g., City, Country)</label>
+                    <input type="text" id="location" name="location" placeholder="Pimpri-Chinchwad, India" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2">
+                </div>
+                <div>
+                    <label for="electricityCost" class="block text-sm font-medium text-gray-700">Avg. Electricity Cost (e.g., 0.15 USD/kWh)</label>
+                    <input type="text" id="electricityCost" name="electricityCost" placeholder="0.10 USD/kWh or 8 INR/kWh" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2">
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-center my-6">
+            <button id="analyzeButton" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg shadow-md transition duration-150 ease-in-out disabled:opacity-50" disabled>
+                Analyze Rooftop
+            </button>
+        </div>
+
+        <div id="resultsContainer" class="hidden">
+            <div class="card">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-6 text-center">Solar Potential Analysis</h2>
+                <div id="loadingIndicator" class="flex justify-center items-center my-6 hidden">
+                    <div class="spinner"></div>
+                    <p class="ml-3 text-gray-600">Analyzing image... This may take a moment.</p>
+                </div>
+                <div id="errorMessage" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-4" role="alert">
+                    <strong class="font-bold">Error!</strong>
+                    <span class="block sm:inline" id="errorText"></span>
+                </div>
+                <div id="analysisResults" class="space-y-6">
+                    </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const imageUpload = document.getElementById('imageUpload');
+        const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+        const imagePreview = document.getElementById('imagePreview');
+        const analyzeButton = document.getElementById('analyzeButton');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const errorMessage = document.getElementById('errorMessage');
+        const errorText = document.getElementById('errorText');
+        const analysisResults = document.getElementById('analysisResults');
+        const locationInput = document.getElementById('location');
+        const electricityCostInput = document.getElementById('electricityCost');
+
+        let base64ImageData = null;
+
+        imageUpload.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                imagePreviewContainer.classList.remove('hidden');
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                    base64ImageData = e.target.result.split(',')[1]; // Get base64 part
+                    analyzeButton.disabled = false;
+                }
+                reader.readAsDataURL(file);
+                resultsContainer.classList.add('hidden'); // Hide previous results
+                analysisResults.innerHTML = ''; // Clear previous results
+                errorMessage.classList.add('hidden'); // Hide previous errors
+            } else {
+                analyzeButton.disabled = true;
+                imagePreviewContainer.classList.add('hidden');
+                base64ImageData = null;
+            }
+        });
+
+        analyzeButton.addEventListener('click', async function() {
+            if (!base64ImageData) {
+                showError("Please upload an image first.");
+                return;
+            }
+
+            resultsContainer.classList.remove('hidden');
+            loadingIndicator.classList.remove('hidden');
+            analysisResults.innerHTML = ''; // Clear previous results
+            errorMessage.classList.add('hidden');
+            analyzeButton.disabled = true;
+            
+            const userLocation = locationInput.value.trim();
+            const userElectricityCost = electricityCostInput.value.trim();
+
+            // Construct the prompt
+            let prompt = `Analyze the provided satellite image of a rooftop for solar panel installation potential.
+Provide a detailed assessment covering the following aspects. Respond ONLY with a valid JSON object.
+
+The JSON object should have the following structure:
+{
+  "rooftop_overview": {
+    "description": "Brief description of the rooftop (e.g., flat, pitched, material if discernible).",
+    "estimated_total_area_sqm": "Estimated total rooftop area in square meters (e.g., 150). Provide a number or a range.",
+    "suitable_sections": "Description of sections most suitable for panels (e.g., 'South-facing pitched roof section', 'Large flat area').",
+    "estimated_usable_area_sqm": "Estimated usable area for solar panels in square meters (e.g., 80). Provide a number or a range."
+  },
+  "solar_panel_recommendation": {
+    "panel_type_assumption": "Assumed solar panel type and wattage (e.g., 'Monocrystalline PERC, 400W per panel').",
+    "estimated_panel_count": "Estimated number of panels that could fit in the usable area (e.g., 20).",
+    "total_capacity_kw": "Total estimated solar system capacity in kilowatts (e.g., 8.0).",
+    "layout_suggestion": "Brief suggestion for panel layout (e.g., 'Portrait orientation, 2 rows of 10 panels on the south-facing slope.')."
+  },
+  "energy_generation_estimate": {
+    "assumed_peak_sun_hours_per_day": "Assumed average peak sun hours per day for the general region (e.g., 4.5). If location is provided, try to be more specific.",
+    "estimated_daily_generation_kwh": "Estimated average daily energy generation in kWh (e.g., 30).",
+    "estimated_monthly_generation_kwh": "Estimated average monthly energy generation in kWh (e.g., 900).",
+    "estimated_annual_generation_kwh": "Estimated average annual energy generation in kWh (e.g., 10800)."
+  },
+  "obstructions_and_shading": {
+    "identified_issues": ["List of potential obstructions or shading sources visible (e.g., 'Chimney on the west side', 'Large nearby tree casting shadow in the afternoon', 'No significant obstructions visible')."]
+  },
+  "installation_considerations": {
+    "roof_type_suitability": "General assessment of roof type suitability for standard mounting, if discernible (e.g., 'Appears to be a tiled roof, generally suitable for standard racking.').",
+    "orientation_and_tilt_advice": "General advice on optimal orientation and tilt if not obvious from the image (e.g., 'Prioritize south-facing installation. Tilt angle should match local latitude for optimal year-round performance, or be adjusted based on roof pitch.')."
+  },
+  "roi_estimate": {
+    "currency_assumption": "Specify currency used for costs/savings (e.g., 'USD' or 'INR'). If location suggests India, use INR, otherwise USD.",
+    "average_electricity_cost_assumption": "Assumed average electricity cost per kWh used for calculation (e.g., '0.15 USD/kWh' or '8 INR/kWh'). Use provided value if available, otherwise make a reasonable assumption.",
+    "estimated_system_cost_range": "Indicative cost range for the recommended system including installation (e.g., '6000-9000 USD' or '4,00,000-6,00,000 INR').",
+    "estimated_annual_savings": "Estimated annual savings on electricity bills (e.g., '1620 USD' or '86400 INR').",
+    "simple_payback_period_years": "Simple payback period in years (e.g., '5-7 years').",
+    "roi_notes_and_assumptions": "Key assumptions made for the ROI calculation (e.g., 'Assumes 100% self-consumption of solar energy generated, stable electricity prices, and does not include specific local incentives or subsidies unless specified. Actual ROI may vary.')."
+  },
+  "confidence_score": {
+    "overall_assessment_confidence": "A qualitative confidence level for the overall assessment (e.g., 'High', 'Medium', 'Low') based on image clarity and rooftop complexity.",
+    "confidence_reasoning": "Brief reasoning for the confidence level (e.g., 'Image is clear and rooftop is simple.', 'Some parts of the rooftop are obscured by shadows, limiting detailed analysis.')."
+  }
+}
+`;
+
+            if (userLocation) {
+                prompt += `\nConsider the location: ${userLocation}.`;
+            }
+            if (userElectricityCost) {
+                prompt += `\nUse an average electricity cost of: ${userElectricityCost}.`;
+            }
+            prompt += "\nEnsure the entire response is a single, valid JSON object without any preceding or succeeding text or markdown formatting."
+
+            try {
+                const payload = {
+                    contents: [
+                        {
+                            role: "user",
+                            parts: [
+                                { text: prompt },
+                                {
+                                    inlineData: {
+                                        mimeType: imageUpload.files[0].type, // e.g., image/jpeg
+                                        data: base64ImageData
+                                    }
+                                }
+                            ]
+                        }
+                    ],
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                    }
+                };
+
+                // Replace with your actual API key if not using a proxy or environment setup
+                const apiKey = "AIzaSyCtDgLLY0k2aWO_4CKF7Z9D3FTc2-gxLK0"; // Canvas will provide this if model is gemini-2.0-flash, otherwise provide your key
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorResult = await response.json();
+                    console.error("API Error Response:", errorResult);
+                    let detailedError = `API request failed with status ${response.status}.`;
+                    if (errorResult.error && errorResult.error.message) {
+                        detailedError += ` Message: ${errorResult.error.message}`;
+                    }
+                    throw new Error(detailedError);
+                }
+
+                const result = await response.json();
+                
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    
+                    // The response should be JSON, but sometimes it might be wrapped in markdown.
+                    let jsonText = result.candidates[0].content.parts[0].text;
+                    
+                    // Clean potential markdown backticks if the model doesn't strictly adhere to JSON output
+                    if (jsonText.startsWith("```json")) {
+                        jsonText = jsonText.substring(7); // Remove ```json\n
+                        if (jsonText.endsWith("```")) {
+                           jsonText = jsonText.substring(0, jsonText.length - 3);
+                        }
+                    }
+                    jsonText = jsonText.trim();
+
+                    const parsedJson = JSON.parse(jsonText);
+                    displayResults(parsedJson);
+                } else {
+                    console.error("Unexpected API response structure:", result);
+                    throw new Error("Failed to get a valid analysis from the AI. The response structure was unexpected.");
+                }
+
+            } catch (err) {
+                console.error("Analysis error:", err);
+                showError(`Analysis failed: ${err.message}. Check console for more details.`);
+            } finally {
+                loadingIndicator.classList.add('hidden');
+                analyzeButton.disabled = false;
+            }
+        });
+
+        function showError(message) {
+            errorText.textContent = message;
+            errorMessage.classList.remove('hidden');
+            loadingIndicator.classList.add('hidden');
+        }
+
+        function displayResults(data) {
+            analysisResults.innerHTML = ''; // Clear previous results
+
+            if (!data) {
+                showError("Received empty analysis data.");
+                return;
+            }
+            
+            // Helper to create a section
+            function createSection(title, contentHtml) {
+                const sectionDiv = document.createElement('div');
+                sectionDiv.className = 'result-section mb-6';
+                sectionDiv.innerHTML = `<h3>${title}</h3><div class="space-y-2 mt-2">${contentHtml}</div>`;
+                return sectionDiv;
+            }
+
+            // Helper to create a result item (key-value pair)
+            function createItem(label, value) {
+                if (value === undefined || value === null || value === "") return '';
+                 // Sanitize value before injecting as HTML
+                const sanitizedValue = String(value).replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                return `<div class="result-item"><span>${label}:</span><span>${sanitizedValue}</span></div>`;
+            }
+            
+            // Helper to create list items
+            function createList(label, itemsArray) {
+                if (!itemsArray || itemsArray.length === 0) return '';
+                let listHtml = itemsArray.map(item => `<li>${String(item).replace(/</g, "&lt;").replace(/>/g, "&gt;")}</li>`).join('');
+                return `<div class="result-item"><span>${label}:</span><ul class="list-disc list-inside pl-4 text-right">${listHtml}</ul></div>`;
+            }
+
+            // 1. Rooftop Overview
+            if (data.rooftop_overview) {
+                let content = '';
+                content += createItem("Description", data.rooftop_overview.description);
+                content += createItem("Est. Total Area (sq m)", data.rooftop_overview.estimated_total_area_sqm);
+                content += createItem("Suitable Sections", data.rooftop_overview.suitable_sections);
+                content += createItem("Est. Usable Area (sq m)", data.rooftop_overview.estimated_usable_area_sqm);
+                analysisResults.appendChild(createSection("Rooftop Overview", content));
+            }
+
+            // 2. Solar Panel Recommendation
+            if (data.solar_panel_recommendation) {
+                let content = '';
+                content += createItem("Panel Type Assumption", data.solar_panel_recommendation.panel_type_assumption);
+                content += createItem("Est. Panel Count", data.solar_panel_recommendation.estimated_panel_count);
+                content += createItem("Total Capacity (kW)", data.solar_panel_recommendation.total_capacity_kw);
+                content += createItem("Layout Suggestion", data.solar_panel_recommendation.layout_suggestion);
+                analysisResults.appendChild(createSection("Solar Panel Recommendation", content));
+            }
+
+            // 3. Energy Generation Estimate
+            if (data.energy_generation_estimate) {
+                let content = '';
+                content += createItem("Assumed Peak Sun Hours/Day", data.energy_generation_estimate.assumed_peak_sun_hours_per_day);
+                content += createItem("Est. Daily Generation (kWh)", data.energy_generation_estimate.estimated_daily_generation_kwh);
+                content += createItem("Est. Monthly Generation (kWh)", data.energy_generation_estimate.estimated_monthly_generation_kwh);
+                content += createItem("Est. Annual Generation (kWh)", data.energy_generation_estimate.estimated_annual_generation_kwh);
+                analysisResults.appendChild(createSection("Energy Generation Estimate", content));
+            }
+
+            // 4. Obstructions and Shading
+            if (data.obstructions_and_shading) {
+                let content = createList("Identified Issues", data.obstructions_and_shading.identified_issues);
+                analysisResults.appendChild(createSection("Obstructions and Shading", content));
+            }
+            
+            // 5. Installation Considerations
+            if (data.installation_considerations) {
+                let content = '';
+                content += createItem("Roof Type Suitability", data.installation_considerations.roof_type_suitability);
+                content += createItem("Orientation & Tilt Advice", data.installation_considerations.orientation_and_tilt_advice);
+                analysisResults.appendChild(createSection("Installation Considerations", content));
+            }
+
+            // 6. ROI Estimate
+            if (data.roi_estimate) {
+                let content = '';
+                content += createItem("Currency Assumption", data.roi_estimate.currency_assumption);
+                content += createItem("Avg. Electricity Cost Assumption", data.roi_estimate.average_electricity_cost_assumption);
+                content += createItem("Est. System Cost Range", data.roi_estimate.estimated_system_cost_range);
+                content += createItem("Est. Annual Savings", data.roi_estimate.estimated_annual_savings);
+                content += createItem("Simple Payback Period (Years)", data.roi_estimate.simple_payback_period_years);
+                content += `<div class="mt-2"><span class="font-medium text-gray-600">Notes & Assumptions:</span><p class="text-sm text-gray-500">${String(data.roi_estimate.roi_notes_and_assumptions).replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p></div>`;
+                analysisResults.appendChild(createSection("Return on Investment (ROI) Estimate", content));
+            }
+            
+            // 7. Confidence Score
+            if (data.confidence_score) {
+                let confidenceBadge = '';
+                const confidenceLevel = data.confidence_score.overall_assessment_confidence?.toLowerCase();
+                if (confidenceLevel === 'high') {
+                    confidenceBadge = `<span class="badge badge-green">${data.confidence_score.overall_assessment_confidence}</span>`;
+                } else if (confidenceLevel === 'medium') {
+                    confidenceBadge = `<span class="badge badge-yellow">${data.confidence_score.overall_assessment_confidence}</span>`;
+                } else if (confidenceLevel === 'low') {
+                    confidenceBadge = `<span class="badge badge-red">${data.confidence_score.overall_assessment_confidence}</span>`;
+                } else {
+                    confidenceBadge = `<span>${data.confidence_score.overall_assessment_confidence || 'N/A'}</span>`;
+                }
+
+                let content = `<div class="result-item"><span>Overall Confidence:</span>${confidenceBadge}</div>`;
+                content += createItem("Reasoning", data.confidence_score.confidence_reasoning);
+                analysisResults.appendChild(createSection("Assessment Confidence", content));
+            }
+        }
+
+    </script>
+</body>
+</html>
