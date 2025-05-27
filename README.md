@@ -1,1 +1,0 @@
-# Solar-Panel-Adviser-AI
