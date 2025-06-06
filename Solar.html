@@ -210,48 +210,7 @@
 
             // Construct the prompt
             let prompt = `Analyze the provided satellite image of a rooftop for solar panel installation potential.
-Provide a detailed assessment covering the following aspects. Respond ONLY with a valid JSON object.
 
-The JSON object should have the following structure:
-{
-  "rooftop_overview": {
-    "description": "Brief description of the rooftop (e.g., flat, pitched, material if discernible).",
-    "estimated_total_area_sqm": "Estimated total rooftop area in square meters (e.g., 150). Provide a number or a range.",
-    "suitable_sections": "Description of sections most suitable for panels (e.g., 'South-facing pitched roof section', 'Large flat area').",
-    "estimated_usable_area_sqm": "Estimated usable area for solar panels in square meters (e.g., 80). Provide a number or a range."
-  },
-  "solar_panel_recommendation": {
-    "panel_type_assumption": "Assumed solar panel type and wattage (e.g., 'Monocrystalline PERC, 400W per panel').",
-    "estimated_panel_count": "Estimated number of panels that could fit in the usable area (e.g., 20).",
-    "total_capacity_kw": "Total estimated solar system capacity in kilowatts (e.g., 8.0).",
-    "layout_suggestion": "Brief suggestion for panel layout (e.g., 'Portrait orientation, 2 rows of 10 panels on the south-facing slope.')."
-  },
-  "energy_generation_estimate": {
-    "assumed_peak_sun_hours_per_day": "Assumed average peak sun hours per day for the general region (e.g., 4.5). If location is provided, try to be more specific.",
-    "estimated_daily_generation_kwh": "Estimated average daily energy generation in kWh (e.g., 30).",
-    "estimated_monthly_generation_kwh": "Estimated average monthly energy generation in kWh (e.g., 900).",
-    "estimated_annual_generation_kwh": "Estimated average annual energy generation in kWh (e.g., 10800)."
-  },
-  "obstructions_and_shading": {
-    "identified_issues": ["List of potential obstructions or shading sources visible (e.g., 'Chimney on the west side', 'Large nearby tree casting shadow in the afternoon', 'No significant obstructions visible')."]
-  },
-  "installation_considerations": {
-    "roof_type_suitability": "General assessment of roof type suitability for standard mounting, if discernible (e.g., 'Appears to be a tiled roof, generally suitable for standard racking.').",
-    "orientation_and_tilt_advice": "General advice on optimal orientation and tilt if not obvious from the image (e.g., 'Prioritize south-facing installation. Tilt angle should match local latitude for optimal year-round performance, or be adjusted based on roof pitch.')."
-  },
-  "roi_estimate": {
-    "currency_assumption": "Specify currency used for costs/savings (e.g., 'USD' or 'INR'). If location suggests India, use INR, otherwise USD.",
-    "average_electricity_cost_assumption": "Assumed average electricity cost per kWh used for calculation (e.g., '0.15 USD/kWh' or '8 INR/kWh'). Use provided value if available, otherwise make a reasonable assumption.",
-    "estimated_system_cost_range": "Indicative cost range for the recommended system including installation (e.g., '6000-9000 USD' or '4,00,000-6,00,000 INR').",
-    "estimated_annual_savings": "Estimated annual savings on electricity bills (e.g., '1620 USD' or '86400 INR').",
-    "simple_payback_period_years": "Simple payback period in years (e.g., '5-7 years').",
-    "roi_notes_and_assumptions": "Key assumptions made for the ROI calculation (e.g., 'Assumes 100% self-consumption of solar energy generated, stable electricity prices, and does not include specific local incentives or subsidies unless specified. Actual ROI may vary.')."
-  },
-  "confidence_score": {
-    "overall_assessment_confidence": "A qualitative confidence level for the overall assessment (e.g., 'High', 'Medium', 'Low') based on image clarity and rooftop complexity.",
-    "confidence_reasoning": "Brief reasoning for the confidence level (e.g., 'Image is clear and rooftop is simple.', 'Some parts of the rooftop are obscured by shadows, limiting detailed analysis.')."
-  }
-}
 `;
 
             if (userLocation) {
